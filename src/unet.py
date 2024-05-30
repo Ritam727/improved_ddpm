@@ -22,7 +22,7 @@ class UNET(nn.Module):
         for ind, mult in enumerate(ch_mult):
             self.encoders.append(SwitchSequential(
                 ResidualBlock(ch_prev, ch_init * mult, d_time),
-                MultiHeadSpatialSelfAttention(ch_init * mult, ch_init * mult) if ind in attn_layers else nn.Identity()
+                MultiHeadSpatialSelfAttention(ch_init * mult, 8) if ind in attn_layers else nn.Identity()
             ))
             self.encoders.append(SwitchSequential(
                 DownSample(ch_init * mult, ch_init * mult)
@@ -43,7 +43,7 @@ class UNET(nn.Module):
             ))
             self.decoders.append(SwitchSequential(
                 ResidualBlock(ch_prev + ch_init * mult * 2, ch_init * mult, d_time),
-                MultiHeadSpatialSelfAttention(ch_init * mult, ch_init * mult) if (len(ch_mult) - ind - 1) in attn_layers else nn.Identity()
+                MultiHeadSpatialSelfAttention(ch_init * mult, 8) if (len(ch_mult) - ind - 1) in attn_layers else nn.Identity()
             ))
             ch_prev = ch_init * mult
         self.decoders = nn.ModuleList(self.decoders)
