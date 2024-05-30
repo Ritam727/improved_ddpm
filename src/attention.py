@@ -35,7 +35,7 @@ class SpatialSelfAttention(nn.Module):
         k = k.view(b, c, h * w).transpose(-1, -2)
         v = v.view(b, c, h * w).transpose(-1, -2)
         
-        wei = q @ k.transpose(1, 2)
+        wei = q @ k.transpose(1, 2) / math.sqrt(c)
         wei = F.softmax(wei, dim = -1)
         out = wei @ v
         
