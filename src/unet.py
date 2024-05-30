@@ -8,7 +8,7 @@ from .multi_head_attention import MultiHeadSpatialSelfAttention
 
 class UNET(nn.Module):
     
-    def __init__(self, in_channels : int, ch_init : int, ch_mult : int, attn_layers : list[int], time_dim : int, d_model : int, d_time : int):
+    def __init__(self, in_channels : int, ch_init : int, ch_mult : list[int], attn_layers : list[int], time_dim : int, d_model : int, d_time : int):
         """
             Backbone model for the diffusion model, used to predict amount of noise added
         """
@@ -64,7 +64,7 @@ class UNET(nn.Module):
             x = layer(x, t)
             y.append(x.clone())
             
-        x = self.bottle_neck(x)
+        x = self.bottle_neck(x, t)
             
         for layer in self.decoders:
             x = layer(torch.cat([x, y.pop()], dim = 1), t)
