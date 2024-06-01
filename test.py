@@ -4,6 +4,7 @@ from src.attention import SpatialSelfAttention
 from src.multi_head_attention import MultiHeadSpatialSelfAttention
 from src.unet_parts import TimeEmbedding, ResidualBlock, DownSample, UpSample
 from src.unet import UNET
+from src.diffusion import Diffusion
 
 
 def test_spatial_self_attention():
@@ -101,8 +102,24 @@ def test_unet():
     with torch.no_grad():
         res = module(img, t)
         
-        assert res.shape == img.shape, "[test_unet] Input image and output image dimensions do not match"
+        assert res.shape[1] == 2 * img.shape[1], "[test_unet] Output channels must be twice that of input channels"
+        assert res.shape[2:] == img.shape[2:], "[test_unet] Input image dimensions and output image dimensions must be same"
     print ("[test_unet] Passed Test")
+
+
+def test_diffusion():
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    
+    img = torch.randn(2, 3, 32, 32).to(device)
+    t = torch.randint(0, 100, (2,)).to(device)
+    noise = torch.randn(2, 3, 32, 32).to(device)
+    module = Diffusion(100).to(device)
+    
+    with torch.no_grad():
+        res = module(img, noise, t)
+        
+        assert res.shape == img.shape, "[test_diffusion] Input image and output image shape must be same"
+    print ("[test_diffusion] Passed Test")
 
 
 if __name__ == "__main__":
@@ -113,3 +130,4 @@ if __name__ == "__main__":
     test_downsample()
     test_upsample()
     test_unet()
+    test_diffusion()
