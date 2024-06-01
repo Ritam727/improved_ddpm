@@ -53,7 +53,7 @@ class UNET(nn.Module):
     def forward(self, x : torch.Tensor, t : torch.LongTensor) -> torch.Tensor:
         """
             Input Shape : (B, C, H, W), (B)
-            Output Shape : (B, C, H, W)
+            Output Shape : (B, 2 * C, H, W)
         """
         
         t = self.time_embedding(t)

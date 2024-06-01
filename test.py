@@ -5,6 +5,7 @@ from src.multi_head_attention import MultiHeadSpatialSelfAttention
 from src.unet_parts import TimeEmbedding, ResidualBlock, DownSample, UpSample
 from src.unet import UNET
 from src.diffusion import Diffusion
+from src.ddpm import DDPM
 
 
 def test_spatial_self_attention():
@@ -122,6 +123,22 @@ def test_diffusion():
     print ("[test_diffusion] Passed Test")
 
 
+def test_ddpm():
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    
+    img = torch.randn(2, 3, 32, 32).to(device)
+    t = torch.randint(0, 100, (2,)).to(device)
+    noise = torch.randn(2, 3, 32, 32).to(device)
+    module = DDPM(3, 32, [1, 2, 4, 4], [2, 3], 100, 64, 16).to(device)
+    
+    with torch.no_grad():
+        res = module(img, noise, t)
+        
+        assert res[0].shape == img.shape, "[test_ddpm] Input image and output mu shape must be same"
+        assert res[1].shape == img.shape, "[test_ddpm] Input image and output log_var shape must be same"
+    print ("[test_ddpm] Passed Test")
+
+
 if __name__ == "__main__":
     test_spatial_self_attention()
     test_multi_head_spatial_self_attention()
@@ -131,3 +148,4 @@ if __name__ == "__main__":
     test_upsample()
     test_unet()
     test_diffusion()
+    test_ddpm()
