@@ -139,6 +139,19 @@ def test_ddpm():
     print ("[test_ddpm] Passed Test")
 
 
+def test_sample():
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    
+    noise = torch.randn(2, 3, 32, 32).to(device)
+    module = DDPM(3, 32, [1, 2, 4, 4], [2, 3], 100, 64, 16).to(device)
+    
+    with torch.no_grad():
+        res = module.sample(noise)
+        
+        assert res.shape == noise.shape, "[test_sample] Input image and output image shape must be same"
+    print ("[test_sample] Passed Test")
+
+
 if __name__ == "__main__":
     test_spatial_self_attention()
     test_multi_head_spatial_self_attention()
@@ -149,3 +162,4 @@ if __name__ == "__main__":
     test_unet()
     test_diffusion()
     test_ddpm()
+    test_sample()

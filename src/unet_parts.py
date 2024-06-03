@@ -135,4 +135,5 @@ class SwitchSequential(nn.Sequential):
                 x = layer(x, t)
             else:
                 x = layer(x)
+        
         return x

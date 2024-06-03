@@ -15,10 +15,12 @@ class Diffusion(nn.Module):
         alpha_bar = f / f[0]
         beta = 1.0 - alpha_bar[1:] / alpha_bar[:-1]
         beta = beta.clamp(max = 0.999)
+        beta_bar = (1.0 - alpha_bar[:-1]) / (1.0 - alpha_bar[1:]) * beta
         alpha_bar = alpha_bar[1:]
         alpha = 1.0 - beta
         
         self.register_buffer("beta", beta)
+        self.register_buffer("beta_bar", beta_bar)
         self.register_buffer("alpha", alpha)
         self.register_buffer("alpha_bar", alpha_bar)
         self.register_buffer("one_minus_alpha_bar", (1.0 - alpha_bar))
@@ -37,4 +39,5 @@ class Diffusion(nn.Module):
         
         sqrt_alpha_bar_t = self.sqrt_alpha_bar[t].view(-1, 1, 1, 1).to(x.device)
         sqrt_one_minus_alpha_bar_t = self.sqrt_one_minus_alpha_bar[t].view(-1, 1, 1, 1).to(x.device)
+        
         return sqrt_alpha_bar_t * x + sqrt_one_minus_alpha_bar_t * noise

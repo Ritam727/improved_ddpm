@@ -28,4 +28,5 @@ class MultiHeadSpatialSelfAttention(nn.Module):
         assert len(x.shape) == 4, "Input must be a batch of images in channels first mode"
         
         h = torch.cat([head(x) for head in self.heads], dim = 1)
+        
         return self.out(h)
