@@ -4,6 +4,8 @@ from torch import nn
 from .diffusion import Diffusion
 from .unet import UNET
 
+import tqdm
+
 
 class DDPM(nn.Module):
     
@@ -37,7 +39,7 @@ class DDPM(nn.Module):
         """
         
         b, c, h, w = x.shape
-        for t in range(self.time_steps, 0, -1):
+        for t in tqdm.trange(self.time_steps, 0, -1):
             z = torch.randn(b, c, h, w).to(x.device) if t > 1 else torch.zeros(b, c, h, w).to(x.device)
             time_tensor = torch.tensor([t - 1] * b).long().to(x.device)
             eps, v = torch.chunk(self.unet(x, time_tensor), 2, dim = 1)

@@ -7,6 +7,10 @@ from src.unet import UNET
 from src.diffusion import Diffusion
 from src.ddpm import DDPM
 
+import matplotlib.pyplot as plt
+
+import numpy as np
+
 
 def test_spatial_self_attention():
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -152,6 +156,18 @@ def test_sample():
     print ("[test_sample] Passed Test")
 
 
+def test_alpha_bar_plot():
+    module = Diffusion(100)
+    
+    alpha_bar = module.alpha_bar.cpu().numpy()
+    
+    plt.plot(np.linspace(0, 1, len(alpha_bar)), alpha_bar)
+    plt.xlabel("t/T")
+    plt.ylabel("alpha_bar")
+    plt.savefig("alpha_bar_plot.png")
+    plt.close()
+
+
 if __name__ == "__main__":
     test_spatial_self_attention()
     test_multi_head_spatial_self_attention()
@@ -163,3 +179,4 @@ if __name__ == "__main__":
     test_diffusion()
     test_ddpm()
     test_sample()
+    test_alpha_bar_plot()

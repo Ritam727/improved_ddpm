@@ -11,8 +11,7 @@ class Diffusion(nn.Module):
         
         super().__init__()
         time_steps_vec = torch.tensor([torch.pi / 2 * ((t / time_steps + 0.008) / 1.008) for t in range(0, time_steps + 1)])
-        f = torch.cos(time_steps_vec).square()
-        alpha_bar = f / f[0]
+        alpha_bar = torch.cos(time_steps_vec).square()
         beta = 1.0 - alpha_bar[1:] / alpha_bar[:-1]
         beta = beta.clamp(max = 0.999)
         beta_bar = (1.0 - alpha_bar[:-1]) / (1.0 - alpha_bar[1:]) * beta
