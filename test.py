@@ -138,8 +138,9 @@ def test_ddpm():
     with torch.no_grad():
         res = module(img, noise, t)
         
-        assert res[0].shape == img.shape, "[test_ddpm] Input image and output mu shape must be same"
-        assert res[1].shape == img.shape, "[test_ddpm] Input image and output log_var shape must be same"
+        assert res[0].shape == img.shape, "[test_ddpm] Input image and output image shape must be same"
+        assert res[1].shape == img.shape, "[test_ddpm] Input image and output mu shape must be same"
+        assert res[2].shape == img.shape, "[test_ddpm] Input image and output log_var shape must be same"
     print ("[test_ddpm] Passed Test")
 
 
@@ -156,15 +157,19 @@ def test_sample():
     print ("[test_sample] Passed Test")
 
 
-def test_alpha_bar_plot():
+def test_variance_schedule_plot():
     module = Diffusion(100)
     
     alpha_bar = module.alpha_bar.cpu().numpy()
+    beta = module.beta.cpu().numpy()
+    beta_bar = module.beta.cpu().numpy()
     
     plt.plot(np.linspace(0, 1, len(alpha_bar)), alpha_bar)
+    plt.plot(np.linspace(0, 1, len(beta)), beta)
+    plt.plot(np.linspace(0, 1, len(beta_bar)), beta_bar)
     plt.xlabel("t/T")
-    plt.ylabel("alpha_bar")
-    plt.savefig("alpha_bar_plot.png")
+    plt.legend(["alpha_bar", "beta", "beta_bar"])
+    plt.savefig("variance_schedule_plot.png")
     plt.close()
 
 
@@ -179,4 +184,4 @@ if __name__ == "__main__":
     test_diffusion()
     test_ddpm()
     test_sample()
-    test_alpha_bar_plot()
+    test_variance_schedule_plot()

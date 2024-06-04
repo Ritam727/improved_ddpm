@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from torch.nn import functional as F
 
 from .diffusion import Diffusion
 from .unet import UNET
@@ -30,7 +31,7 @@ class DDPM(nn.Module):
         x_t = self.diffusion(x, noise, t)
         eps, v = torch.chunk(self.unet(x_t, t), 2, dim = 1)
         
-        return eps, v
+        return x_t, eps, F.sigmoid(v)
     
     def sample(self, x : torch.Tensor) -> torch.Tensor:
         """
