@@ -30,8 +30,10 @@ class DDPM(nn.Module):
         
         x_t = self.diffusion(x, noise, t)
         eps, v = torch.chunk(self.unet(x_t, t), 2, dim = 1)
+        v -= torch.min(v)
+        v /= torch.max(v)
         
-        return x_t, eps, F.sigmoid(v)
+        return x_t, eps, v
     
     def sample(self, x : torch.Tensor) -> torch.Tensor:
         """
@@ -50,6 +52,7 @@ class DDPM(nn.Module):
             beta_bar_t = self.diffusion.beta_bar[t - 1]
             sqrt_one_minus_alpha_bar_t = self.diffusion.sqrt_one_minus_alpha_bar[t - 1]
             
-            x = 1 / sqrt_alpha_t * (x - beta_t / sqrt_one_minus_alpha_bar_t * eps) + torch.exp(v * torch.log(beta_t) + (1.0 - v) * torch.log(beta_bar_t)) * z
+            log_var = v * torch.log(beta_t) + (1.0 - v) * torch.log(beta_bar_t)
+            x = 1 / sqrt_alpha_t * (x - beta_t / sqrt_one_minus_alpha_bar_t * eps) + torch.exp(0.5 * log_var) * z
             
         return x
