@@ -30,8 +30,6 @@ class DDPM(nn.Module):
         
         x_t = self.diffusion(x, noise, t)
         eps, v = torch.chunk(self.unet(x_t, t), 2, dim = 1)
-        v = v - torch.min(v)
-        v = v / torch.max(v)
         
         return x_t, eps, v
     
