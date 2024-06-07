@@ -42,18 +42,18 @@ class DDPM(nn.Module):
         b, c, h, w = x.shape
         
         indices = torch.linspace(1, self.time_steps - 1, num_steps + 1).int()
-        sqrt_alpha = self.diffusion.sqrt_alpha[indices].squeeze()
         alpha_bar = self.diffusion.alpha_bar[indices].squeeze()
-        beta = (1.0 - alpha_bar[1:] / alpha_bar[:-1]).squeeze()
-        beta_bar = (1 - alpha_bar[:-1]) / (1 - alpha_bar[1:]).squeeze() * beta
         sqrt_one_minus_alpha_bar = self.diffusion.sqrt_one_minus_alpha_bar[indices].squeeze()
+        beta = (1.0 - alpha_bar[1:] / alpha_bar[:-1]).squeeze()
+        sqrt_alpha = (1.0 - beta).sqrt()
+        beta_bar = (1 - alpha_bar[:-1]) / (1 - alpha_bar[1:]).squeeze() * beta
         
         for t in tqdm.trange(num_steps, 0, -1):
             z = torch.randn(b, c, h, w).to(x.device) if t > 1 else torch.zeros(b, c, h, w).to(x.device)
             time_tensor = torch.tensor([t - 1] * b).long().to(x.device)
             eps, v = torch.chunk(self.unet(x, time_tensor), 2, dim = 1)
             
-            sqrt_alpha_t = sqrt_alpha[t]
+            sqrt_alpha_t = sqrt_alpha[t - 1]
             beta_t = beta[t - 1]
             beta_bar_t = beta_bar[t - 1]
             sqrt_one_minus_alpha_bar_t = sqrt_one_minus_alpha_bar[t]

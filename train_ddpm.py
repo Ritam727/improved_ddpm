@@ -31,10 +31,10 @@ def train(module : DDPM, dataset : Dataset, epochs : int, batch_size : int, lear
                 sqrt_alpha_t = module.diffusion.sqrt_alpha[t].view(img.shape[0], 1, 1, 1)
                 beta_t = module.diffusion.beta[t].view(img.shape[0], 1, 1, 1)
                 beta_bar_t = module.diffusion.beta_bar[t].view(img.shape[0], 1, 1, 1)
-                sqrt_one_minus_alpha_bar_t = module.diffusion.sqrt_one_minus_alpha_bar[t].view(img.shape[0], 1, 1, 1)
-                sqrt_alpha_bar_t_minus_one = module.diffusion.sqrt_alpha_bar[t - 1].view(img.shape[0], 1, 1, 1)
-                one_minus_alpha_bar_t_minus_one = module.diffusion.sqrt_one_minus_alpha_bar[t - 1].square().view(img.shape[0], 1, 1, 1)
-                one_minus_alpha_bar_t = module.diffusion.sqrt_one_minus_alpha_bar[t].square().view(img.shape[0], 1, 1, 1)
+                sqrt_one_minus_alpha_bar_t = module.diffusion.sqrt_one_minus_alpha_bar[t + 1].view(img.shape[0], 1, 1, 1)
+                sqrt_alpha_bar_t_minus_one = module.diffusion.sqrt_alpha_bar[t].view(img.shape[0], 1, 1, 1)
+                one_minus_alpha_bar_t_minus_one = module.diffusion.sqrt_one_minus_alpha_bar[t].square().view(img.shape[0], 1, 1, 1)
+                one_minus_alpha_bar_t = module.diffusion.sqrt_one_minus_alpha_bar[t + 1].square().view(img.shape[0], 1, 1, 1)
                 
                 u = 1 / sqrt_alpha_t * (img - beta_t / sqrt_one_minus_alpha_bar_t * eps)
                 u_bar = sqrt_alpha_bar_t_minus_one * beta_t / one_minus_alpha_bar_t * img + sqrt_alpha_t * one_minus_alpha_bar_t_minus_one / one_minus_alpha_bar_t * x_t
