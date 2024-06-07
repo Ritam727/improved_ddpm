@@ -42,3 +42,41 @@ class SpatialSelfAttention(nn.Module):
         out = out.transpose(1, 2).view(b, c, h, w)
         
         return out
+
+
+class SelfAttention(nn.Module):
+    
+    def __init__(self, d_in : int, d_out : int, bias : bool = False):
+        """
+            Computes Spatial Self Attention for an image
+        """
+        
+        super().__init__()
+        self.d_out = d_out
+        self.query = nn.Linear(d_in, d_out, bias = bias)
+        self.key = nn.Linear(d_in, d_out, bias = bias)
+        self.value = nn.Linear(d_in, d_out, bias = bias)
+        
+    def forward(self, x : torch.Tensor) -> torch.Tensor:
+        """
+            Input Shape : (B, C, H, W)
+            Output Shape : (B, C, H, W)
+        """
+        
+        assert len(x.shape) == 4, "Input must be a batch of images in channels first mode"
+        
+        b, c, h, w = x.shape
+        
+        x = x.view(b, c, h * w).transpose(-1, -2)
+        
+        q = self.query(x)
+        k = self.key(x)
+        v = self.value(x)
+        
+        wei = q @ k.transpose(1, 2) / math.sqrt(self.d_out)
+        wei = F.softmax(wei, dim = -1)
+        out = wei @ v
+        
+        out = out.transpose(1, 2).view(b, self.d_out, h, w)
+        
+        return out

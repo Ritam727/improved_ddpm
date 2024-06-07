@@ -1,7 +1,7 @@
 import torch
 
-from src.attention import SpatialSelfAttention
-from src.multi_head_attention import MultiHeadSpatialSelfAttention
+from src.attention import SpatialSelfAttention, SelfAttention
+from src.multi_head_attention import MultiHeadSpatialSelfAttention, MultiHeadSelfAttention
 from src.unet_parts import TimeEmbedding, ResidualBlock, DownSample, UpSample
 from src.unet import UNET
 from src.diffusion import Diffusion
@@ -25,6 +25,19 @@ def test_spatial_self_attention():
     print ("[test_spatial_self_attention] Passed Test")
 
 
+def test_self_attention():
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    
+    img = torch.randn(1, 64, 32, 32).to(device)
+    module = SelfAttention(64, 64).to(device)
+    
+    with torch.no_grad():
+        res = module(img)
+        
+        assert res.shape == img.shape, "[test_self_attention] Input image and output image dimensions do not match"
+    print ("[test_self_attention] Passed Test")
+
+
 def test_multi_head_spatial_self_attention():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -36,6 +49,19 @@ def test_multi_head_spatial_self_attention():
         
         assert res.shape == img.shape, "[test_multi_head_spatial_self_attention] Input image and output image dimensions do not match"
     print ("[test_multi_head_spatial_self_attention] Passed Test")
+
+
+def test_multi_head_self_attention():
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    img = torch.randn(1, 64, 32, 32).to(device)
+    module = MultiHeadSelfAttention(64, 4).to(device)
+    
+    with torch.no_grad():
+        res = module(img)
+        
+        assert res.shape == img.shape, "[test_multi_head_self_attention] Input image and output image dimensions do not match"
+    print ("[test_multi_head_self_attention] Passed Test")
 
 
 def test_time_embedding():
@@ -151,9 +177,10 @@ def test_sample():
     module = DDPM(3, 32, [1, 2, 4, 4], [2, 3], 100, 64, 16).to(device)
     
     with torch.no_grad():
-        res = module.sample(noise, 20)
-        
-        assert res.shape == noise.shape, "[test_sample] Input image and output image shape must be same"
+        for num_steps in [20, 50, 75, 100]:
+            res = module.sample(noise, num_steps)
+            
+            assert res.shape == noise.shape, "[test_sample] Input image and output image shape must be same"
     print ("[test_sample] Passed Test")
 
 
@@ -175,7 +202,9 @@ def test_variance_schedule_plot():
 
 if __name__ == "__main__":
     test_spatial_self_attention()
+    test_self_attention()
     test_multi_head_spatial_self_attention()
+    test_multi_head_self_attention()
     test_time_embedding()
     test_residual_block()
     test_downsample()

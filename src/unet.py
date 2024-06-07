@@ -3,7 +3,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from .unet_parts import DownSample, ResidualBlock, UpSample, SwitchSequential, TimeEmbedding
-from .multi_head_attention import MultiHeadSpatialSelfAttention
+from .multi_head_attention import MultiHeadSelfAttention
 
 
 class UNET(nn.Module):
@@ -22,7 +22,7 @@ class UNET(nn.Module):
         for ind, mult in enumerate(ch_mult):
             self.encoders.append(SwitchSequential(
                 ResidualBlock(ch_prev, ch_init * mult, d_time),
-                MultiHeadSpatialSelfAttention(ch_init * mult, 8) if ind in attn_layers else nn.Identity()
+                MultiHeadSelfAttention(ch_init * mult, 8) if ind in attn_layers else nn.Identity()
             ))
             self.encoders.append(SwitchSequential(
                 DownSample(ch_init * mult, ch_init * mult)
@@ -32,7 +32,7 @@ class UNET(nn.Module):
         
         self.bottle_neck = SwitchSequential(
             ResidualBlock(ch_prev, ch_prev, d_time),
-            MultiHeadSpatialSelfAttention(ch_prev, ch_prev),
+            MultiHeadSelfAttention(ch_prev, ch_prev),
             ResidualBlock(ch_prev, ch_prev, d_time)
         )
         
@@ -43,7 +43,7 @@ class UNET(nn.Module):
             ))
             self.decoders.append(SwitchSequential(
                 ResidualBlock(ch_prev + ch_init * mult * 2, ch_init * mult, d_time),
-                MultiHeadSpatialSelfAttention(ch_init * mult, 8) if (len(ch_mult) - ind - 1) in attn_layers else nn.Identity()
+                MultiHeadSelfAttention(ch_init * mult, 8) if (len(ch_mult) - ind - 1) in attn_layers else nn.Identity()
             ))
             ch_prev = ch_init * mult
         self.decoders = nn.ModuleList(self.decoders)

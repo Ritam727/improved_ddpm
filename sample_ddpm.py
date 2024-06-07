@@ -18,10 +18,6 @@ if __name__ == "__main__":
     parser.add_argument("--device",
                         help = "Device to use for sampling",
                         default = "cuda")
-    parser.add_argument("--num_steps",
-                        help = "Number of steps to use during sampling",
-                        type = int,
-                        default = 250)
     parser.add_argument("--prefix",
                         help = "Directory in which to sample the images",
                         default = "generated_images/default")
@@ -37,7 +33,6 @@ if __name__ == "__main__":
     
     num_images = args.num_images
     device = args.device
-    num_steps = args.num_steps
     prefix = args.prefix
     load_model_from = args.load_model_from
     img_shape = args.img_shape
@@ -56,14 +51,15 @@ if __name__ == "__main__":
     
     with no_grad():
         noise = randn(num_images, 3, img_shape, img_shape).to(device)
-        img = ddpm.sample(noise, num_steps)
-        
-        img -= minimum(img)
-        img *= 255.0 / maximum(img)
-        img = img.cpu().numpy()
-        
-        for i, img_ in enumerate(img):
-            img_ = img_.transpose(1, 2, 0)
-            img_ = cvtColor(img_, COLOR_RGB2BGR)
-            path = join(prefix, str(i))
-            imwrite(f"{path}.png", img_)
+        for num_steps in [25, 50, 100, 200, 400, 1000, 4000]:
+            img = ddpm.sample(noise, num_steps)
+            
+            img -= minimum(img)
+            img *= 255.0 / maximum(img)
+            img = img.cpu().numpy()
+            
+            for i, img_ in enumerate(img):
+                img_ = img_.transpose(1, 2, 0)
+                img_ = cvtColor(img_, COLOR_RGB2BGR)
+                path = join(prefix, str(i))
+                imwrite(f"{path}_{num_steps}.png", img_)
