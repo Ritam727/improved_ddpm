@@ -48,7 +48,10 @@ class UNET(nn.Module):
             ch_prev = ch_init * mult
         self.decoders = nn.ModuleList(self.decoders)
         
-        self.tail = nn.Conv2d(ch_prev, 2 * in_channels, kernel_size = 3, stride = 1, padding = 1)
+        self.tail = nn.Sequential(
+            nn.GroupNorm(32, ch_prev),
+            nn.Conv2d(ch_prev, 2 * in_channels, kernel_size = 3, stride = 1, padding = 1)
+        )
         
     def forward(self, x : torch.Tensor, t : torch.LongTensor) -> torch.Tensor:
         """

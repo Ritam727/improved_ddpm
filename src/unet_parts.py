@@ -36,7 +36,7 @@ class TimeEmbedding(nn.Module):
 
 class ResidualBlock(nn.Module):
     
-    def __init__(self, in_channels : int, out_channels : int, d_time : int):
+    def __init__(self, in_channels : int, out_channels : int, d_time : int, batch_norm : bool = False):
         """
             Residual Block computing time embedding and convolutions on the image
         """
@@ -56,6 +56,10 @@ class ResidualBlock(nn.Module):
             nn.SiLU(),
             nn.Conv2d(out_channels, out_channels, kernel_size = 3, stride = 1, padding = 1)
         )
+        self.group_norm = nn.Sequential(
+            nn.GroupNorm(32, out_channels),
+            nn.SiLU()
+        )
         if in_channels == out_channels:
             self.residual_layer = nn.Identity()
         else:
@@ -73,6 +77,7 @@ class ResidualBlock(nn.Module):
         residue = x
         x = self.block1(x) + t.unsqueeze(-1).unsqueeze(-1)
         x = self.block2(x)
+        x = self.group_norm(x)
         
         return x + self.residual_layer(residue)
 

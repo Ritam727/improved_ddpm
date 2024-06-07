@@ -15,7 +15,6 @@ class Diffusion(nn.Module):
         beta = 1.0 - alpha_bar[1:] / alpha_bar[:-1]
         beta = beta.clamp(max = 0.999)
         beta_bar = (1.0 - alpha_bar[:-1]) / (1.0 - alpha_bar[1:]) * beta
-        alpha_bar = alpha_bar[1:]
         alpha = 1.0 - beta
         
         self.register_buffer("beta", beta)

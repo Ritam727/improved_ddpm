@@ -151,7 +151,7 @@ def test_sample():
     module = DDPM(3, 32, [1, 2, 4, 4], [2, 3], 100, 64, 16).to(device)
     
     with torch.no_grad():
-        res = module.sample(noise)
+        res = module.sample(noise, 20)
         
         assert res.shape == noise.shape, "[test_sample] Input image and output image shape must be same"
     print ("[test_sample] Passed Test")

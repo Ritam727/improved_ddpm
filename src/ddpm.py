@@ -33,22 +33,30 @@ class DDPM(nn.Module):
         
         return x_t, eps, v
     
-    def sample(self, x : torch.Tensor) -> torch.Tensor:
+    def sample(self, x : torch.Tensor, num_steps : int) -> torch.Tensor:
         """
             Input Shape : (B, C, H, W)
             Output Shape : (B, C, H, W)
         """
         
         b, c, h, w = x.shape
-        for t in tqdm.trange(self.time_steps, 0, -1):
+        
+        indices = torch.linspace(1, self.time_steps - 1, num_steps + 1).int()
+        sqrt_alpha = self.diffusion.sqrt_alpha[indices].squeeze()
+        alpha_bar = self.diffusion.alpha_bar[indices].squeeze()
+        beta = (1.0 - alpha_bar[1:] / alpha_bar[:-1]).squeeze()
+        beta_bar = (1 - alpha_bar[:-1]) / (1 - alpha_bar[1:]).squeeze() * beta
+        sqrt_one_minus_alpha_bar = self.diffusion.sqrt_one_minus_alpha_bar[indices].squeeze()
+        
+        for t in tqdm.trange(num_steps, 0, -1):
             z = torch.randn(b, c, h, w).to(x.device) if t > 1 else torch.zeros(b, c, h, w).to(x.device)
             time_tensor = torch.tensor([t - 1] * b).long().to(x.device)
             eps, v = torch.chunk(self.unet(x, time_tensor), 2, dim = 1)
             
-            sqrt_alpha_t = self.diffusion.sqrt_alpha[t - 1]
-            beta_t = self.diffusion.beta[t - 1]
-            beta_bar_t = self.diffusion.beta_bar[t - 1]
-            sqrt_one_minus_alpha_bar_t = self.diffusion.sqrt_one_minus_alpha_bar[t - 1]
+            sqrt_alpha_t = sqrt_alpha[t]
+            beta_t = beta[t - 1]
+            beta_bar_t = beta_bar[t - 1]
+            sqrt_one_minus_alpha_bar_t = sqrt_one_minus_alpha_bar[t]
             
             log_var = v * torch.log(beta_t) + (1.0 - v) * torch.log(beta_bar_t)
             x = 1 / sqrt_alpha_t * (x - beta_t / sqrt_one_minus_alpha_bar_t * eps) + torch.exp(0.5 * log_var) * z
