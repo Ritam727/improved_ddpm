@@ -51,7 +51,7 @@ if __name__ == "__main__":
     
     with no_grad():
         noise = randn(num_images, 3, img_shape, img_shape).to(device)
-        for num_steps in [25, 50, 100, 200, 400, 1000, 4000]:
+        for num_steps in [25, 50, 100, 200, 400, 1000, 2000]:
             img = ddpm.sample(noise, num_steps)
             
             img -= minimum(img)
