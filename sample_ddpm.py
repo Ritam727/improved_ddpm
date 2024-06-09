@@ -9,6 +9,8 @@ from argparse import ArgumentParser
 
 from cv2 import cvtColor, imwrite, COLOR_RGB2BGR
 
+from yaml import safe_load, YAMLError
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--num_images",
@@ -28,6 +30,9 @@ if __name__ == "__main__":
                         help = "Shape of image to generate",
                         type = int,
                         default = 32)
+    parser.add_argument("--model_arch",
+                        help = "Yaml file to load model architecture from",
+                        default = "models/default.yaml")
     
     args = parser.parse_args()
     
@@ -36,10 +41,19 @@ if __name__ == "__main__":
     prefix = args.prefix
     load_model_from = args.load_model_from
     img_shape = args.img_shape
+    model_arch = args.model_arch
+    
+    try:
+        with open(model_arch) as stream:
+            model_hyper_parameters = safe_load(stream)
+    except FileNotFoundError:
+        print ("Definition file not found")
+    except YAMLError:
+        print ("Error in YAML file")
     
     system(f"mkdir -p {prefix}")
     
-    ddpm = DDPM(3, 64, [1, 2, 4, 4], [2, 3], 4000, 256, 64).to(device)
+    ddpm = DDPM(*model_hyper_parameters.values()).to(device)
     try:
         ddpm.load_state_dict(load(load_model_from, map_location = device))
     except FileNotFoundError:
@@ -51,7 +65,7 @@ if __name__ == "__main__":
     
     with no_grad():
         noise = randn(num_images, 3, img_shape, img_shape).to(device)
-        for num_steps in [25, 50, 100, 200, 400, 1000, 2000]:
+        for num_steps in [25, 50, 100, 200, 400, 1000]:
             img = ddpm.sample(noise, num_steps)
             
             img -= minimum(img)

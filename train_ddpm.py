@@ -11,6 +11,8 @@ from torchvision.transforms import ToTensor, Compose, RandomHorizontalFlip, Norm
 
 from tqdm import tqdm
 
+from yaml import safe_load, YAMLError
+
 
 def train(module : DDPM, dataset : Dataset, epochs : int, batch_size : int, learning_rate : float, device : str, save_model_as, progress : bool = True):
     loader = DataLoader(dataset, shuffle = True, batch_size = batch_size)
@@ -84,6 +86,9 @@ if __name__ == "__main__":
                         help = "Option for showing progress bar",
                         type = int,
                         default = True)
+    parser.add_argument("--model_arch",
+                        help = "Yaml file to load model architecture from",
+                        default = "models/default.yaml")
     
     args = parser.parse_args()
     
@@ -94,6 +99,15 @@ if __name__ == "__main__":
     batch_size = int(args.batch_size)
     learning_rate = float(args.learning_rate)
     progress = int(args.progress)
+    model_arch = str(args.model_arch)
+    
+    try:
+        with open(model_arch) as stream:
+            model_hyper_parameters = safe_load(stream)
+    except FileNotFoundError:
+        print ("Definition file not found")
+    except YAMLError:
+        print ("Error in YAML file")
     
     if dataset_name.upper() == "CIFAR10":
         dataset = CIFAR10("data", train = True, transform = Compose([ToTensor(), RandomHorizontalFlip(), Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]), download = True)
@@ -102,7 +116,7 @@ if __name__ == "__main__":
     else:
         raise NotImplementedError(f"Unknown dataset {dataset_name}")
     
-    ddpm = DDPM(3, 64, [1, 2, 4, 4], [2, 3], 4000, 256, 64).to(device)
+    ddpm = DDPM(*model_hyper_parameters.values()).to(device)
     try:
         ddpm.load_state_dict(load(save_model_as, map_location = device))
     except FileNotFoundError:

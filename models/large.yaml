@@ -1,0 +1,13 @@
+in_channels: 3
+ch_init: 128
+ch_mult:
+  - 1
+  - 2
+  - 4
+  - 8
+attn_layers:
+  - 2
+  - 3
+time_dim: 4000
+d_model: 512
+d_time: 128
