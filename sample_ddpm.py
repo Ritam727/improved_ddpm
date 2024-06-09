@@ -1,5 +1,7 @@
 from torch import load, no_grad, randn, min as minimum, max as maximum
 
+from torchvision.utils import make_grid
+
 from src.ddpm import DDPM
 
 from os import system
@@ -65,15 +67,14 @@ if __name__ == "__main__":
     
     with no_grad():
         noise = randn(num_images, 3, img_shape, img_shape).to(device)
-        for num_steps in [25, 50, 100, 200, 400, 1000]:
+        for num_steps in [25, 50, 100, 200, 400, 1000, 2000]:
             img = ddpm.sample(noise, num_steps)
             
             img -= minimum(img)
             img *= 255.0 / maximum(img)
-            img = img.cpu().numpy()
+            img = make_grid(img, nrow = 4)
             
-            for i, img_ in enumerate(img):
-                img_ = img_.transpose(1, 2, 0)
-                img_ = cvtColor(img_, COLOR_RGB2BGR)
-                path = join(prefix, str(i))
-                imwrite(f"{path}_{num_steps}.png", img_)
+            img = img.cpu().numpy().transpose(1, 2, 0)
+            img = cvtColor(img, COLOR_RGB2BGR)
+            path = join(prefix, str(num_steps))
+            imwrite(f"{path}.png", img)

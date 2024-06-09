@@ -48,9 +48,9 @@ class DDPM(nn.Module):
         sqrt_alpha = (1.0 - beta).sqrt()
         beta_bar = (1 - alpha_bar[:-1]) / (1 - alpha_bar[1:]).squeeze() * beta
         
-        for t in tqdm.trange(num_steps - 1, 0, -1):
+        for t, time in zip(tqdm.trange(num_steps - 1, 0, -1), list(indices[:-1])):
             z = torch.randn(b, c, h, w).to(x.device) if t > 1 else torch.zeros(b, c, h, w).to(x.device)
-            time_tensor = torch.tensor([t - 1] * b).long().to(x.device)
+            time_tensor = torch.tensor([time] * b).long().to(x.device)
             eps, v = torch.chunk(self.unet(x, time_tensor), 2, dim = 1)
             
             sqrt_alpha_t = sqrt_alpha[t - 1]
