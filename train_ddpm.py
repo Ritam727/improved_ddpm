@@ -31,7 +31,7 @@ def train(module : DDPM, dataset : Dataset, epochs : int, batch_size : int, lear
             
             img = img.to(device)
             noise = randn(img.shape).to(device)
-            t = randint(1, module.time_steps, (img.shape[0],)).long().to(device)
+            t = randint(0, module.time_steps, (img.shape[0],)).long().to(device)
             x_t, eps, v = module(img, noise, t)
             
             sqrt_alpha_t = module.diffusion.sqrt_alpha[t].view(img.shape[0], 1, 1, 1)

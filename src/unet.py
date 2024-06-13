@@ -50,7 +50,9 @@ class UNET(nn.Module):
         
         self.tail = nn.Sequential(
             nn.GroupNorm(32, ch_prev),
-            nn.Conv2d(ch_prev, 2 * in_channels, kernel_size = 3, stride = 1, padding = 1)
+            nn.SiLU(),
+            nn.Conv2d(ch_prev, 2 * in_channels, kernel_size = 3, stride = 1, padding = 1),
+            nn.BatchNorm2d(2 * in_channels)
         )
         
     def forward(self, x : torch.Tensor, t : torch.LongTensor) -> torch.Tensor:
