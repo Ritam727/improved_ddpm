@@ -24,9 +24,9 @@ class UNET(nn.Module):
                 ResidualBlock(ch_prev, ch_init * mult, d_time),
                 MultiHeadSelfAttention(ch_init * mult, 8) if ind in attn_layers else nn.Identity()
             ))
-            self.encoders.append(SwitchSequential(
+            self.encoders.append(
                 DownSample(ch_init * mult, ch_init * mult)
-            ))
+            )
             ch_prev = ch_init * mult    
         self.encoders = nn.ModuleList(self.encoders)
         
@@ -38,9 +38,9 @@ class UNET(nn.Module):
         
         self.decoders = []
         for ind, mult in enumerate(reversed(ch_mult)):
-            self.decoders.append(SwitchSequential(
-                UpSample(ch_prev + ch_init * mult, ch_prev + ch_init * mult)
-            ))
+            self.decoders.append(
+                UpSample(ch_prev, ch_prev + ch_init * mult)
+            )
             self.decoders.append(SwitchSequential(
                 ResidualBlock(ch_prev + ch_init * mult * 2, ch_init * mult, d_time),
                 MultiHeadSelfAttention(ch_init * mult, 8) if (len(ch_mult) - ind - 1) in attn_layers else nn.Identity()
@@ -65,12 +65,19 @@ class UNET(nn.Module):
         
         y = []
         for layer in self.encoders:
-            x = layer(x, t)
-            y.append(x.clone())
+            if isinstance(layer, SwitchSequential):
+                x = layer(x, t)
+            else:
+                x = layer(x)
+            if isinstance(layer, SwitchSequential):
+                y.append(x.clone())
             
         x = self.bottle_neck(x, t)
             
         for layer in self.decoders:
-            x = layer(torch.cat([x, y.pop()], dim = 1), t)
+            if isinstance(layer, SwitchSequential):
+                x = layer(torch.cat([x, y.pop()], dim = 1), t)
+            else:
+                x = layer(x)
         
         return self.tail(x)
