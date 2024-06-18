@@ -31,7 +31,7 @@ class DDPM(nn.Module):
         x_t = self.diffusion(x, noise, t)
         eps, v = torch.chunk(self.unet(x_t, t), 2, dim = 1)
         
-        return x_t, eps, F.sigmoid(v)
+        return x_t, eps, v
     
     def sample(self, x : torch.Tensor, num_steps : int) -> torch.Tensor:
         """
