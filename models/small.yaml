@@ -6,8 +6,7 @@ ch_mult:
   - 4
   - 4
 attn_layers:
-  - 2
   - 3
-time_dim: 4000
+time_dim: 1000
 d_model: 128
 d_time: 32

@@ -35,6 +35,10 @@ if __name__ == "__main__":
     parser.add_argument("--model_arch",
                         help = "Yaml file to load model architecture from",
                         default = "models/default.yaml")
+    parser.add_argument("--num_steps",
+                        help = "Number of steps for sampling",
+                        type = int,
+                        default = 250)
     
     args = parser.parse_args()
     
@@ -44,6 +48,7 @@ if __name__ == "__main__":
     load_model_from = args.load_model_from
     img_shape = args.img_shape
     model_arch = args.model_arch
+    num_steps = args.num_steps
     
     try:
         with open(model_arch) as stream:
@@ -67,14 +72,13 @@ if __name__ == "__main__":
     
     with no_grad():
         noise = randn(num_images, 3, img_shape, img_shape).to(device)
-        for num_steps in [25, 50, 100, 200, 400, 1000, 4000]:
-            img = ddpm.sample(noise, num_steps)
-            
-            img -= minimum(img)
-            img *= 255.0 / maximum(img)
-            img = make_grid(img, nrow = 4)
-            
-            img = img.cpu().numpy().transpose(1, 2, 0)
-            img = cvtColor(img, COLOR_RGB2BGR)
-            path = join(prefix, str(num_steps))
-            imwrite(f"{path}.png", img)
+        img = ddpm.sample(noise, num_steps)
+        
+        img -= minimum(img)
+        img *= 255.0 / maximum(img)
+        img = make_grid(img, nrow = 4)
+        
+        img = img.cpu().numpy().transpose(1, 2, 0)
+        img = cvtColor(img, COLOR_RGB2BGR)
+        path = join(prefix, str(num_steps))
+        imwrite(f"{path}.png", img)
