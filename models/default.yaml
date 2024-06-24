@@ -1,10 +1,10 @@
 in_channels: 3
-ch_init: 64
+ch_init: 128
 ch_mult:
   - 1
   - 2
-  - 4
-  - 4
+  - 2
+  - 2
 attn_layers:
   - 2
   - 3

@@ -1,6 +1,6 @@
 from torch import load, save, randn, randint, exp, log
 from torch.utils.data import DataLoader, Dataset
-from torch.optim import AdamW
+from torch.optim import Adam
 
 from src.ddpm import DDPM
 
@@ -16,7 +16,7 @@ from yaml import safe_load, YAMLError
 
 def train(module : DDPM, dataset : Dataset, epochs : int, batch_size : int, learning_rate : float, device : str, save_model_as, progress : bool = True):
     loader = DataLoader(dataset, shuffle = True, batch_size = batch_size)
-    optim = AdamW(module.unet.parameters(), lr = learning_rate)
+    optim = Adam(module.unet.parameters(), lr = learning_rate)
     
     for epoch in range(epochs):
         if not progress:

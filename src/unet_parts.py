@@ -13,16 +13,16 @@ class TimeEmbedding(nn.Module):
         """
         
         super().__init__()
-        positional_encodings = torch.zeros(time_dim, d_model)
+        positional_encodings = torch.zeros(time_dim, d_time)
         positions = torch.arange(0, time_dim).float().unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000) / d_model))
+        div_term = torch.exp(torch.arange(0, d_time, 2).float() * (-math.log(10000) / d_time))
         positional_encodings[:, 0::2] = torch.sin(positions * div_term)
         positional_encodings[:, 1::2] = torch.cos(positions * div_term)
         self.temb = nn.Sequential(
             nn.Embedding.from_pretrained(positional_encodings),
-            nn.Linear(d_model, d_time),
+            nn.Linear(d_time, d_model),
             nn.SiLU(),
-            nn.Linear(d_time, d_time)
+            nn.Linear(d_model, d_time)
         )
         
     def forward(self, t : torch.LongTensor) -> torch.Tensor:
@@ -91,8 +91,8 @@ class DownSample(nn.Module):
         
         super().__init__()
         self.layer = nn.Sequential(
-            nn.GroupNorm(32, in_channels),
             nn.SiLU(),
+            nn.GroupNorm(32, in_channels),
             nn.Conv2d(in_channels, out_channels, kernel_size = 3, stride = 2, padding = 1)
         )
         
@@ -114,6 +114,8 @@ class UpSample(nn.Module):
         
         super().__init__()
         self.layer = nn.Sequential(
+            nn.SiLU(),
+            nn.GroupNorm(32, in_channels),
             nn.Upsample(scale_factor = 2),
             nn.Conv2d(in_channels, out_channels, kernel_size = 1, stride = 1, padding = 0)
         )

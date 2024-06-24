@@ -29,7 +29,7 @@ class MultiHeadSpatialSelfAttention(nn.Module):
         
         h = torch.cat([head(x) for head in self.heads], dim = 1)
         
-        return self.out(h)
+        return x + self.out(h)
 
 
 class MultiHeadSelfAttention(nn.Module):
@@ -57,4 +57,4 @@ class MultiHeadSelfAttention(nn.Module):
         
         h = torch.cat([head(x) for head in self.heads], dim = 1)
         
-        return self.out(h)
+        return x + self.out(h)
