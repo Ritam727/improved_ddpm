@@ -13,8 +13,10 @@ from tqdm import tqdm
 
 from yaml import safe_load, YAMLError
 
+from os import system
 
-def train(module : DDPM, dataset : Dataset, epochs : int, batch_size : int, learning_rate : float, device : str, save_model_as, progress : bool = True):
+
+def train(module : DDPM, dataset : Dataset, epochs : int, batch_size : int, learning_rate : float, device : str, save_model_as, model_arch : str, progress : bool = True, sample_every : int = 10, num_samples : int = 4):
     loader = DataLoader(dataset, shuffle = True, batch_size = batch_size)
     optim = Adam(module.unet.parameters(), lr = learning_rate)
     
@@ -56,7 +58,10 @@ def train(module : DDPM, dataset : Dataset, epochs : int, batch_size : int, lear
             
             if isinstance(itr, tqdm):
                 itr.set_postfix(mse = mse.item(), kl = kl.item(), loss = loss.item())
+        
         save(module.state_dict(), save_model_as)
+        if sample_every != 0 and (epoch + 1) % sample_every == 0:
+            system(f"python sample_ddpm.py --num_images {num_samples} --num_steps 100 250 500 1000 2000 4000 --load_model_from {save_model_as} --model_arch {model_arch} --prefix generated_samples/run_{epoch + 1}")
 
 
 if __name__ == "__main__":
@@ -89,6 +94,14 @@ if __name__ == "__main__":
     parser.add_argument("--model_arch",
                         help = "Yaml file to load model architecture from",
                         default = "models/default.yaml")
+    parser.add_argument("--sample_every",
+                        help = "Sample generation interval",
+                        type = int,
+                        default = 10)
+    parser.add_argument("--num_samples",
+                        help = "Number of samples to generate during sampling",
+                        type = int,
+                        default = 4)
     
     args = parser.parse_args()
     
@@ -100,6 +113,8 @@ if __name__ == "__main__":
     learning_rate = float(args.learning_rate)
     progress = int(args.progress)
     model_arch = str(args.model_arch)
+    sample_every = int(args.sample_every)
+    num_samples = int(args.num_samples)
     
     try:
         with open(model_arch) as stream:
@@ -124,4 +139,4 @@ if __name__ == "__main__":
     except RuntimeError:
         print (f"Key mismatch in {save_model_as}, not loading from file")
     
-    train(ddpm, dataset, epochs, batch_size, learning_rate, device, save_model_as, progress)
+    train(ddpm, dataset, epochs, batch_size, learning_rate, device, save_model_as, model_arch, progress, sample_every, num_samples)

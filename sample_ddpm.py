@@ -37,6 +37,7 @@ if __name__ == "__main__":
                         default = "models/default.yaml")
     parser.add_argument("--num_steps",
                         help = "Number of steps for sampling",
+                        nargs = "+",
                         type = int,
                         default = 250)
     
@@ -48,7 +49,7 @@ if __name__ == "__main__":
     load_model_from = args.load_model_from
     img_shape = args.img_shape
     model_arch = args.model_arch
-    num_steps = args.num_steps
+    num_steps = list(args.num_steps)
     
     try:
         with open(model_arch) as stream:
@@ -72,13 +73,14 @@ if __name__ == "__main__":
     
     with no_grad():
         noise = randn(num_images, 3, img_shape, img_shape).to(device)
-        img = ddpm.sample(noise, num_steps)
-        
-        img -= minimum(img)
-        img *= 255.0 / maximum(img)
-        img = make_grid(img, nrow = 4)
-        
-        img = img.cpu().numpy().transpose(1, 2, 0)
-        img = cvtColor(img, COLOR_RGB2BGR)
-        path = join(prefix, str(num_steps))
-        imwrite(f"{path}.png", img)
+        for num_steps_ in num_steps:
+            img = ddpm.sample(noise, num_steps_)
+            
+            img -= minimum(img)
+            img *= 255.0 / maximum(img)
+            img = make_grid(img, nrow = 4)
+            
+            img = img.cpu().numpy().transpose(1, 2, 0)
+            img = cvtColor(img, COLOR_RGB2BGR)
+            path = join(prefix, str(num_steps_))
+            imwrite(f"{path}.png", img)
