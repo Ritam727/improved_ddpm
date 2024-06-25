@@ -3,8 +3,8 @@ ch_init: 64
 ch_mult:
   - 1
   - 2
-  - 2
-  - 2
+  - 4
+  - 4
 attn_layers:
   - 2
   - 3
