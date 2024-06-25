@@ -42,9 +42,8 @@ class DDPM(nn.Module):
         b, c, h, w = x.shape
         
         indices = torch.linspace(0, self.time_steps, num_steps + 1).int()
-        time_steps_vec = torch.tensor([torch.pi / 2 * ((t / num_steps + 0.008) / 1.008) for t in range(0, num_steps + 1)])
-        alpha_bar = torch.cos(time_steps_vec).square()
-        sqrt_one_minus_alpha_bar = (1 - alpha_bar).sqrt().squeeze()
+        alpha_bar = self.diffusion.alpha_bar[indices].squeeze()
+        sqrt_one_minus_alpha_bar = self.diffusion.sqrt_one_minus_alpha_bar[indices].squeeze()
         beta = (1.0 - alpha_bar[1:] / alpha_bar[:-1]).squeeze()
         beta = beta.clamp(max = 0.999)
         sqrt_alpha = (1.0 - beta).sqrt()
@@ -52,9 +51,10 @@ class DDPM(nn.Module):
         indices = reversed(list(indices[:-1]))
         
         for t, time in zip(tqdm.trange(num_steps, 0, -1), indices):
-            z = torch.randn(b, c, h, w).to(x.device)
+            z = torch.randn(b, c, h, w).to(x.device) if t > 1 else torch.zeros(b, c, h, w).to(x.device)
             time_tensor = torch.tensor([t - 1] * b).long().to(x.device)
             eps, v = torch.chunk(self.unet(x, time_tensor), 2, dim = 1)
+            v = F.sigmoid(v)
             
             sqrt_alpha_t = sqrt_alpha[t - 1]
             beta_t = beta[t - 1]
@@ -63,12 +63,13 @@ class DDPM(nn.Module):
             
             log_var = v * torch.log(beta_t) + (1.0 - v) * torch.log(beta_bar_t)
             
-            assert torch.isnan(eps).sum() == 0, f"Encountered NaN values during sampling at time step {num_steps - t} in module output"
-            if t > 1:
-                assert torch.isnan(log_var).sum() == 0, f"Encountered NaN values during sampling at time step {num_steps - t} while log operation"
+            if torch.isnan(eps).sum() > 0:
+                print (f"Encountered NaN values during sampling at time step {num_steps - t} in module output")
+                break
+            if torch.isnan(log_var).sum() > 0:
+                print (f"Encountered NaN values during sampling at time step {num_steps - t} while log operation")
+                break
             
-            x = 1 / sqrt_alpha_t * (x - beta_t / sqrt_one_minus_alpha_bar_t * eps)
-            if t > 1:
-                x += torch.exp(0.5 * log_var) * z
+            x = 1 / sqrt_alpha_t * (x - beta_t / sqrt_one_minus_alpha_bar_t * eps) + torch.exp(0.5 * log_var) * z
             
         return x
